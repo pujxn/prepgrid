@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { JobDescriptionScreen } from '@/components/JobDescriptionScreen'
 import { QuestionListScreen } from '@/components/QuestionListScreen'
 import { AnswerScreen } from '@/components/AnswerScreen'
+import { MockBanner } from '@/components/MockBanner'
 import { useSession } from '@/hooks/useSession'
 import type { Question } from '@/types'
 
@@ -51,6 +52,7 @@ function PrepGrid() {
         question={selectedQuestion}
         session={session}
         onBack={() => setView('questions')}
+        onNavigate={handleSelectQuestion}
         onSaveAnswer={saveAnswer}
         onSaveEvaluation={saveEvaluation}
       />
@@ -65,6 +67,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <div className="dark">
         <PrepGrid />
+        <MockBanner />
       </div>
     </QueryClientProvider>
   )

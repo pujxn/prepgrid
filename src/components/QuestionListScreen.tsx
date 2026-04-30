@@ -1,4 +1,4 @@
-import { ArrowLeft, CheckCircle2, Circle } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Category, Question } from '@/types'
 import type { Session } from '@/hooks/useSession'
@@ -8,6 +8,7 @@ interface Props {
   session: Session
   onSelectQuestion: (question: Question) => void
   onReset: () => void
+  onRetry?: () => void
 }
 
 const CATEGORY_ORDER: Category[] = ['Technical', 'Behavioral', 'Role-specific']
@@ -33,7 +34,7 @@ const CATEGORY_STYLES: Record<Category, { label: string; dot: string; header: st
   },
 }
 
-export function QuestionListScreen({ session, onSelectQuestion, onReset }: Props) {
+export function QuestionListScreen({ session, onSelectQuestion, onReset, onRetry }: Props) {
   const byCategory = CATEGORY_ORDER.reduce<Record<Category, Question[]>>(
     (acc, cat) => {
       acc[cat] = session.questions.filter((q) => q.category === cat)
@@ -44,6 +45,34 @@ export function QuestionListScreen({ session, onSelectQuestion, onReset }: Props
 
   const answeredCount = Object.keys(session.answers).length
   const total = session.questions.length
+
+  if (total === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-sm text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="p-3 rounded-full bg-secondary">
+              <TriangleAlert className="h-6 w-6 text-muted-foreground" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-medium text-foreground">No questions generated</h2>
+            <p className="text-sm text-muted-foreground">
+              The AI didn't return any questions. Try again with a more detailed job description.
+            </p>
+          </div>
+          <div className="flex justify-center gap-3">
+            {onRetry && (
+              <Button onClick={onRetry} size="sm">Try again</Button>
+            )}
+            <Button variant="ghost" size="sm" onClick={onReset}>
+              New job
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

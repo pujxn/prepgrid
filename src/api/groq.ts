@@ -1,7 +1,7 @@
 import OpenAI from 'openai'
 import type { Question, Evaluation } from '@/types'
 
-const IS_MOCK = !import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROQ_API_KEY === 'your_groq_api_key_here'
+export const IS_MOCK = !import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROQ_API_KEY === 'your_groq_api_key_here'
 
 const client = new OpenAI({
   apiKey: import.meta.env.VITE_GROQ_API_KEY ?? 'mock',
@@ -80,7 +80,17 @@ Make the questions specific to the job description provided.`,
   const content = response.choices[0]?.message?.content
   if (!content) throw new Error('No response from API')
 
-  const parsed = JSON.parse(content) as { questions: Question[] }
+  let parsed: { questions: Question[] }
+  try {
+    parsed = JSON.parse(content) as { questions: Question[] }
+  } catch {
+    throw new Error('The AI returned an unexpected response. Please try again.')
+  }
+
+  if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+    throw new Error('No questions were returned. Try a more detailed job description.')
+  }
+
   return parsed.questions
 }
 
@@ -126,5 +136,16 @@ Provide 2-3 strengths and 2-3 weaknesses. The suggested answer should be specifi
   const content = response.choices[0]?.message?.content
   if (!content) throw new Error('No response from API')
 
-  return JSON.parse(content) as Evaluation
+  let parsed: Evaluation
+  try {
+    parsed = JSON.parse(content) as Evaluation
+  } catch {
+    throw new Error('The AI returned an unexpected response. Please try again.')
+  }
+
+  if (typeof parsed.score !== 'number' || !Array.isArray(parsed.strengths) || !Array.isArray(parsed.weaknesses)) {
+    throw new Error('Evaluation response was malformed. Please try again.')
+  }
+
+  return parsed
 }

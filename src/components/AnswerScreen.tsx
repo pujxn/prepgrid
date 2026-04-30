@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { ArrowLeft, Loader2, CheckCircle2, XCircle, Lightbulb, SendHorizonal } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Loader2, CheckCircle2, XCircle, Lightbulb, SendHorizonal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { evaluateAnswer } from '@/api/groq'
+import { useKeydown } from '@/hooks/useKeydown'
 import type { Question, Evaluation } from '@/types'
 import type { Session } from '@/hooks/useSession'
 import { cn } from '@/lib/utils'
@@ -11,6 +12,7 @@ interface Props {
   question: Question
   session: Session
   onBack: () => void
+  onNavigate: (question: Question) => void
   onSaveAnswer: (questionId: string, answer: string) => void
   onSaveEvaluation: (questionId: string, evaluation: Evaluation) => void
 }
@@ -37,12 +39,21 @@ function ScoreBadge({ score }: { score: number }) {
   )
 }
 
-export function AnswerScreen({ question, session, onBack, onSaveAnswer, onSaveEvaluation }: Props) {
+export function AnswerScreen({ question, session, onBack, onNavigate, onSaveAnswer, onSaveEvaluation }: Props) {
   const saved = session.answers[question.id]
   const [answer, setAnswer] = useState(saved?.answer ?? '')
   const [isEvaluating, setIsEvaluating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [evaluation, setEvaluation] = useState<Evaluation | null>(saved?.evaluation ?? null)
+
+  const currentIndex = session.questions.findIndex((q) => q.id === question.id)
+  const prevQuestion = currentIndex > 0 ? session.questions[currentIndex - 1] : null
+  const nextQuestion = currentIndex < session.questions.length - 1 ? session.questions[currentIndex + 1] : null
+
+  useKeydown('Escape', () => onBack(), [onBack])
+  useKeydown('Enter', (e) => {
+    if ((e.metaKey || e.ctrlKey) && canSubmit) handleSubmit()
+  }, [answer, isEvaluating])
 
   async function handleSubmit() {
     if (!answer.trim()) return
@@ -65,15 +76,43 @@ export function AnswerScreen({ question, session, onBack, onSaveAnswer, onSaveEv
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground gap-1.5 -ml-2">
-            <ArrowLeft className="h-4 w-4" />
-            Questions
-          </Button>
-          <span className="text-muted-foreground/40 text-sm">/</span>
-          <span className={cn('text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded border', CATEGORY_STYLES[question.category])}>
-            {question.category}
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground gap-1.5 -ml-2">
+              <ArrowLeft className="h-4 w-4" />
+              Questions
+            </Button>
+            <span className="text-muted-foreground/40 text-sm">/</span>
+            <span className={cn('text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded border', CATEGORY_STYLES[question.category])}>
+              {question.category}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => prevQuestion && onNavigate(prevQuestion)}
+              disabled={!prevQuestion}
+              className="h-8 w-8 text-muted-foreground"
+              title="Previous question"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs text-muted-foreground tabular-nums w-12 text-center">
+              {currentIndex + 1} / {session.questions.length}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => nextQuestion && onNavigate(nextQuestion)}
+              disabled={!nextQuestion}
+              className="h-8 w-8 text-muted-foreground"
+              title="Next question"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-6">
@@ -96,7 +135,14 @@ export function AnswerScreen({ question, session, onBack, onSaveAnswer, onSaveEv
               </p>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground/50">
+                {canSubmit ? (
+                  <span className="hidden sm:inline">⌘ Enter to submit</span>
+                ) : answer.trim().length > 0 ? (
+                  'Keep going...'
+                ) : null}
+              </span>
               <Button onClick={handleSubmit} disabled={!canSubmit} className="gap-2">
                 {isEvaluating ? (
                   <>
@@ -156,6 +202,15 @@ export function AnswerScreen({ question, session, onBack, onSaveAnswer, onSaveEv
               </div>
               <p className="text-sm text-foreground/80 leading-relaxed">{evaluation.suggestedAnswer}</p>
             </div>
+
+            {nextQuestion && (
+              <div className="flex justify-end pt-2">
+                <Button variant="outline" onClick={() => onNavigate(nextQuestion)} className="gap-2">
+                  Next question
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
