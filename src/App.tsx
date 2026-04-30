@@ -5,8 +5,15 @@ import { QuestionListScreen } from '@/components/QuestionListScreen'
 import { AnswerScreen } from '@/components/AnswerScreen'
 import { SummaryScreen } from '@/components/SummaryScreen'
 import { MockBanner } from '@/components/MockBanner'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { useSession } from '@/hooks/useSession'
 import type { Question } from '@/types'
+
+type Theme = 'light' | 'dark'
+
+function getInitialTheme(): Theme {
+  return (localStorage.getItem('theme') as Theme) ?? 'dark'
+}
 
 const queryClient = new QueryClient()
 
@@ -103,11 +110,22 @@ function PrepGrid() {
 }
 
 export default function App() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  function toggleTheme() {
+    setTheme((t) => {
+      const next = t === 'dark' ? 'light' : 'dark'
+      localStorage.setItem('theme', next)
+      return next
+    })
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="dark">
+      <div className={theme}>
         <PrepGrid />
         <MockBanner />
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
       </div>
     </QueryClientProvider>
   )
