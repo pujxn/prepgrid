@@ -27,6 +27,12 @@ const MOCK_QUESTIONS: Question[] = [
   { id: '13', category: 'Role-specific', text: 'What does good documentation look like to you, and how do you make time for it?' },
 ]
 
+const MOCK_FOLLOW_UP_QUESTION =
+  "That's a good point — can you walk me through a specific example where you had to make a difficult trade-off, and how you communicated the decision to stakeholders?"
+
+const MOCK_FOLLOW_UP_FEEDBACK =
+  "Good instinct to ground your answer in a concrete example. To strengthen this further, try to quantify the impact — for instance, 'we shipped two weeks early but spent three sprints on cleanup' gives the interviewer a clearer picture of the trade-off you navigated and shows self-awareness about consequences."
+
 const MOCK_EVALUATION: Evaluation = {
   score: 7,
   strengths: [
@@ -148,4 +154,65 @@ Provide 2-3 strengths and 2-3 weaknesses. The suggested answer should be specifi
   }
 
   return parsed
+}
+
+export async function generateFollowUp(question: string, answer: string): Promise<string> {
+  if (IS_MOCK) {
+    void question
+    void answer
+    await new Promise((r) => setTimeout(r, 700))
+    return MOCK_FOLLOW_UP_QUESTION
+  }
+
+  const response = await client.chat.completions.create({
+    model: MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: `You are an interviewer conducting a live interview. Based on the candidate's answer, generate one sharp follow-up question that probes deeper — targeting a gap, an assumption, or an area they glossed over. Return only the follow-up question as plain text. No preamble, no explanation.`,
+      },
+      {
+        role: 'user',
+        content: `Original question: ${question}\n\nCandidate's answer: ${answer}`,
+      },
+    ],
+    temperature: 0.7,
+  })
+
+  const content = response.choices[0]?.message?.content
+  if (!content) throw new Error('No response from API')
+  return content.trim()
+}
+
+export async function evaluateFollowUpAnswer(
+  originalQuestion: string,
+  followUpQuestion: string,
+  followUpAnswer: string,
+): Promise<string> {
+  if (IS_MOCK) {
+    void originalQuestion
+    void followUpQuestion
+    void followUpAnswer
+    await new Promise((r) => setTimeout(r, 800))
+    return MOCK_FOLLOW_UP_FEEDBACK
+  }
+
+  const response = await client.chat.completions.create({
+    model: MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: `You are an interview coach giving concise feedback on a follow-up answer. Write 2-3 sentences of coaching: what worked, what to sharpen. Be direct and specific. Return plain text only.`,
+      },
+      {
+        role: 'user',
+        content: `Original question: ${originalQuestion}\nFollow-up question: ${followUpQuestion}\nCandidate's answer: ${followUpAnswer}`,
+      },
+    ],
+    temperature: 0.5,
+  })
+
+  const content = response.choices[0]?.message?.content
+  if (!content) throw new Error('No response from API')
+  return content.trim()
 }

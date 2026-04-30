@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Question, AnswerEntry } from '@/types'
+import type { Question, AnswerEntry, Evaluation, FollowUp } from '@/types'
 
 export interface Session {
   jobDescription: string
@@ -27,7 +27,7 @@ export function useSession() {
     })
   }
 
-  function saveEvaluation(questionId: string, evaluation: import('@/types').Evaluation) {
+  function saveEvaluation(questionId: string, evaluation: Evaluation) {
     setSession((prev) => {
       if (!prev) return prev
       return {
@@ -40,9 +40,22 @@ export function useSession() {
     })
   }
 
+  function saveFollowUp(questionId: string, followUp: FollowUp) {
+    setSession((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        answers: {
+          ...prev.answers,
+          [questionId]: { ...prev.answers[questionId], followUp },
+        },
+      }
+    })
+  }
+
   function reset() {
     setSession(null)
   }
 
-  return { session, startSession, saveAnswer, saveEvaluation, reset }
+  return { session, startSession, saveAnswer, saveEvaluation, saveFollowUp, reset }
 }

@@ -6,18 +6,6 @@ export interface Question {
   text: string
 }
 
-export interface GeneratedQuestions {
-  questions: Question[]
-}
-
-export interface Strength {
-  point: string
-}
-
-export interface Weakness {
-  point: string
-}
-
 export interface Evaluation {
   score: number
   strengths: string[]
@@ -25,8 +13,15 @@ export interface Evaluation {
   suggestedAnswer: string
 }
 
+export interface FollowUp {
+  question: string
+  answer: string
+  feedback: string
+}
+
 export interface AnswerEntry {
   questionId: string
   answer: string
   evaluation?: Evaluation
+  followUp?: FollowUp
 }
