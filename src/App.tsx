@@ -26,14 +26,29 @@ function PrepGrid() {
     setView('answer')
   }
 
+  function handleBack() {
+    setSelectedQuestion(null)
+    setView('input')
+  }
+
   function handleReset() {
     reset()
     setSelectedQuestion(null)
     setView('input')
   }
 
+  function handleQuestionsRegenerated(jobDescription: string, questions: Question[]) {
+    reset()
+    startSession(jobDescription, questions)
+    setView('questions')
+  }
+
   if (view === 'input' || !session) {
-    return <JobDescriptionScreen onQuestionsGenerated={handleQuestionsGenerated} />
+    return (
+      <JobDescriptionScreen
+        initialValue={session?.jobDescription}
+        onQuestionsGenerated={session ? handleQuestionsRegenerated : handleQuestionsGenerated}
+      />
   }
 
   if (view === 'questions') {
@@ -41,7 +56,7 @@ function PrepGrid() {
       <QuestionListScreen
         session={session}
         onSelectQuestion={handleSelectQuestion}
-        onReset={handleReset}
+        onReset={handleBack}
       />
     )
   }

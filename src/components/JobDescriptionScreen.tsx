@@ -6,11 +6,12 @@ import { generateQuestions } from '@/api/groq'
 import type { Question } from '@/types'
 
 interface Props {
+  initialValue?: string
   onQuestionsGenerated: (jobDescription: string, questions: Question[]) => void
 }
 
-export function JobDescriptionScreen({ onQuestionsGenerated }: Props) {
-  const [jobDescription, setJobDescription] = useState('')
+export function JobDescriptionScreen({ initialValue = '', onQuestionsGenerated }: Props) {
+  const [jobDescription, setJobDescription] = useState(initialValue)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

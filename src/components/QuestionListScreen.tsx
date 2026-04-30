@@ -90,7 +90,7 @@ export function QuestionListScreen({ session, onSelectQuestion, onReset, onRetry
           </div>
           <Button variant="ghost" size="sm" onClick={onReset} className="text-muted-foreground shrink-0 gap-1.5">
             <ArrowLeft className="h-4 w-4" />
-            New job
+            Edit job description
           </Button>
         </div>
 
