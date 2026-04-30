@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { JobDescriptionScreen } from '@/components/JobDescriptionScreen'
 import { QuestionListScreen } from '@/components/QuestionListScreen'
+import { AnswerScreen } from '@/components/AnswerScreen'
 import { useSession } from '@/hooks/useSession'
 import type { Question } from '@/types'
 
@@ -10,7 +11,7 @@ const queryClient = new QueryClient()
 type View = 'input' | 'questions' | 'answer'
 
 function PrepGrid() {
-  const { session, startSession, reset } = useSession()
+  const { session, startSession, saveAnswer, saveEvaluation, reset } = useSession()
   const [view, setView] = useState<View>('input')
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
 
@@ -44,20 +45,19 @@ function PrepGrid() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="text-center space-y-2">
-        <p className="text-foreground font-medium">{selectedQuestion?.text}</p>
-        <p className="text-muted-foreground text-sm">Answer input coming next...</p>
-        <button
-          onClick={() => setView('questions')}
-          className="text-xs text-muted-foreground underline underline-offset-2 mt-2"
-        >
-          ← Back to questions
-        </button>
-      </div>
-    </div>
-  )
+  if (view === 'answer' && selectedQuestion) {
+    return (
+      <AnswerScreen
+        question={selectedQuestion}
+        session={session}
+        onBack={() => setView('questions')}
+        onSaveAnswer={saveAnswer}
+        onSaveEvaluation={saveEvaluation}
+      />
+    )
+  }
+
+  return null
 }
 
 export default function App() {
