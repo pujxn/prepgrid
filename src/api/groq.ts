@@ -1,15 +1,52 @@
 import OpenAI from 'openai'
 import type { Question, Evaluation } from '@/types'
 
+const IS_MOCK = !import.meta.env.VITE_GROQ_API_KEY || import.meta.env.VITE_GROQ_API_KEY === 'your_groq_api_key_here'
+
 const client = new OpenAI({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
+  apiKey: import.meta.env.VITE_GROQ_API_KEY ?? 'mock',
   baseURL: 'https://api.groq.com/openai/v1',
   dangerouslyAllowBrowser: true,
 })
 
 const MODEL = 'llama-3.3-70b-versatile'
 
+const MOCK_QUESTIONS: Question[] = [
+  { id: '1', category: 'Technical', text: 'Explain the difference between a process and a thread, and when you would use one over the other.' },
+  { id: '2', category: 'Technical', text: 'How does garbage collection work in a language of your choice, and what are common pitfalls?' },
+  { id: '3', category: 'Technical', text: 'Walk me through how you would design a URL shortener like bit.ly.' },
+  { id: '4', category: 'Technical', text: 'What is the difference between SQL and NoSQL databases, and how do you decide which to use?' },
+  { id: '5', category: 'Technical', text: 'Describe how you would optimize a slow database query.' },
+  { id: '6', category: 'Behavioral', text: 'Tell me about a time you disagreed with a technical decision made by your team. How did you handle it?' },
+  { id: '7', category: 'Behavioral', text: 'Describe a situation where you had to learn a new technology quickly under pressure.' },
+  { id: '8', category: 'Behavioral', text: 'Give me an example of a project where something went wrong and how you recovered.' },
+  { id: '9', category: 'Behavioral', text: 'How do you prioritize when you have multiple deadlines competing for your time?' },
+  { id: '10', category: 'Role-specific', text: 'What experience do you have with CI/CD pipelines, and what tools have you used?' },
+  { id: '11', category: 'Role-specific', text: 'How have you approached code reviews — both giving and receiving feedback?' },
+  { id: '12', category: 'Role-specific', text: 'Describe your experience working in an agile team. What worked well and what didn\'t?' },
+  { id: '13', category: 'Role-specific', text: 'What does good documentation look like to you, and how do you make time for it?' },
+]
+
+const MOCK_EVALUATION: Evaluation = {
+  score: 7,
+  strengths: [
+    'Clear and structured response that directly addresses the question.',
+    'Good use of a concrete example to illustrate your point.',
+  ],
+  weaknesses: [
+    'Could elaborate more on the outcome and what you learned from the experience.',
+    'Missing quantifiable impact — numbers or metrics would strengthen the answer.',
+  ],
+  suggestedAnswer:
+    'A strong answer would start with a brief context-setting sentence, describe the specific challenge using the STAR method (Situation, Task, Action, Result), quantify the outcome where possible, and close with a reflection on what you learned or would do differently.',
+}
+
 export async function generateQuestions(jobDescription: string): Promise<Question[]> {
+  if (IS_MOCK) {
+    await new Promise((r) => setTimeout(r, 800))
+    return MOCK_QUESTIONS
+  }
+
   const response = await client.chat.completions.create({
     model: MODEL,
     messages: [
@@ -51,6 +88,13 @@ export async function evaluateAnswer(
   question: string,
   answer: string,
 ): Promise<Evaluation> {
+  if (IS_MOCK) {
+    void question
+    void answer
+    await new Promise((r) => setTimeout(r, 1000))
+    return MOCK_EVALUATION
+  }
+
   const response = await client.chat.completions.create({
     model: MODEL,
     messages: [
