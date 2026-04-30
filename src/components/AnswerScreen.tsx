@@ -171,10 +171,18 @@ export function AnswerScreen({
             )}
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground/50">
-                {canSubmit ? <span className="hidden sm:inline">⌘ Enter to submit</span>
-                  : answer.trim().length > 0 && !isExpired ? 'Keep going...' : null}
-              </span>
+              <div className="flex items-center gap-2">
+                {nextQuestion && (
+                  <Button variant="ghost" size="sm" onClick={() => onNavigate(nextQuestion)}
+                    className="gap-1.5 text-muted-foreground">
+                    Skip <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )}
+                <span className="text-xs text-muted-foreground/50">
+                  {canSubmit ? <span className="hidden sm:inline">⌘ Enter to submit</span>
+                    : answer.trim().length > 0 && !isExpired ? 'Keep going...' : null}
+                </span>
+              </div>
               <Button onClick={handleSubmit} disabled={!canSubmit} className="gap-2">
                 {isEvaluating ? (
                   <><Loader2 className="h-4 w-4 animate-spin" />Evaluating...</>
